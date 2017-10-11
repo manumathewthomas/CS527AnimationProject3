@@ -1,72 +1,42 @@
 "use strict";
 (function(){
 
-  let clock = new THREE.Clock(),
-    camera, controls, scene, renderer, mixer, skeletonHelper;
+  let clock = new THREE.Clock();
+  let camera;
+  let controls;
+  let scene;
+  let renderer;
 
+  let boids = [];
+  let v1, v2, v3;
 
-  function setupSkeleton(result) {
-   
-      skeletonHelper = new THREE.SkeletonHelper( result.skeleton.bones[ 0 ] );
-      skeletonHelper.skeleton = result.skeleton; // allow animation mixer to bind to SkeletonHelper directly
-
-      let boneContainer = new THREE.Group();
-      boneContainer.add( result.skeleton.bones[ 0 ] );
-
-      scene.add( skeletonHelper );
-      scene.add( boneContainer );
-
-       let staticJoint = [];
-       let dynamicJoint = [];
-
-       _.forEach(result.clip.tracks, function(d) {
-          if(d.times.length == 2)
-            staticJoint.push(d);
-          else
-            dynamicJoint.push(d);
-       });
-
-       console.log(result.clip.tracks[0])
-
-       _.forEach(result.clip.tracks[0].times, function(d,i) {
-            controlPoints = {
-                              pt1:{x:0 ,y:0, z:0},
-                              pt2:{x:0 ,y:0, z:0},
-                              pt3:{x:0 ,y:0, z:0},
-                              pt4:{x:0 ,y:0, z:0}
-                            };
-            if(i<=result.clip.tracks[0].times.length-3)
-            {
-              controlPoints.pt1.x = result.clip.tracks[0].values[i]
-            }
-       });
-
-      // play animation
-      // mixer = new THREE.AnimationMixer( skeletonHelper );
-      // mixer.clipAction( result.clip ).setEffectiveWeight( 1.0 ).play();
+  class Boid {
+  	constructor() {
+  		this.velocity = new THREE.Vector3(-5, 0, 0);
+  		this.geometry = new THREE.ConeGeometry( 5, 20, 32 );
+		this.material = new THREE.MeshBasicMaterial( {color: 0xf03b20} );
+		this.mesh = new THREE.Mesh(this.geometry, this.material );  	}
   }
 
 
-  function loadBVH(model) {
-    return new Promise(function(resolve, reject) {
-      let loader = new THREE.BVHLoader();
-      loader.load( model, function(result){
-        resolve(result);
-      });
+  let createBoid = function(n) {
+
+  	_.times(n, function() {
+  		boids.push(new Boid());
+  	});
+
+  	 _.forEach(boids, function(d){
+  	 	d.mesh.rotateZ(Math.PI / 2 );
+  	 	d.mesh.position.set(Math.floor((Math.random() * 50) + 1), Math.floor((Math.random() * 50) + 1), Math.floor((Math.random() * 50) + 1));
+    	scene.add(d.mesh);
     });
+
   }
-
-
-  function init() {
-
-    /* Load the BVH models*/
-    loadBVH("models/bvh/Male1_Run.bvh").then(function(result){
-      /* Setup the model once the async data fetch resolves  */
-      setupSkeleton(result);
-    });
+ 
+  let init = function() {
 
     camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 1000 );
-    camera.position.set( 0, 200, 400 );
+    camera.position.set( 0, 0 , 600 );
 
     controls = new THREE.OrbitControls( camera );
     controls.minDistance = 300;
@@ -87,10 +57,16 @@
     window.addEventListener( 'resize', onWindowResize, false );
 
     /* animate the scene */
+
+    createBoid(500);
+
+  
+    console.log(boids);
+
     animate();
   }
 
-  function onWindowResize() {
+  let onWindowResize = function() {
 
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
@@ -99,41 +75,74 @@
 
   }
 
-  function animate() {
+  let rule1 = function(boid) {
+  	let center = new  THREE.Vector3();
 
+  	_.forEach(boids, function(d) {
+  		if(d != boid)
+  			center.add(d.mesh.position);
+  	});
+
+  	center = center.divideScalar(boids.length-1);
+
+  	return (center.sub(boid.mesh.position)).divideScalar(100);
+  }
+
+  let rule2 = function(boid) {
+  	let velocity = new THREE.Vector3();
+
+  	_.forEach(boids, function(d){
+  		if(d != boid)
+  			if(d.mesh.position.distanceTo(boid.mesh.position) < 5)
+  				velocity = velocity.sub(d.mesh.position.sub(boid.mesh.position));
+  	});
+
+  	return velocity
+  }
+
+  let rule3 = function(boid) {
+  	let velocity = new THREE.Vector3();
+
+  	_.forEach(boids, function(d){
+  		if(d != boid)
+  			velocity = velocity .add(d.velocity);
+  	});
+
+  	velocity = velocity.divideScalar(boids.length-1);
+
+  	return (velocity.sub(boid.velocity)).divideScalar(8);
+  }
+
+  let flock = function() {
+
+  	_.forEach(boids, function(d){
+  		v1 = rule1(d);
+  		v2 = rule2(d);
+  		v3 = rule3(d);
+
+  		d.velocity.add(v1);
+  		d.velocity.add(v2);
+  		d.velocity.add(v3);
+
+  		d.mesh.position.add(d.velocity);
+  	});
+
+  }
+
+ 
+
+   let animate = function() {
+
+   	flock();
     requestAnimationFrame( animate );
 
-    let delta = clock.getDelta();
-
-    if ( mixer ) mixer.update( delta );
 
     renderer.render( scene, camera );
 
   }
 
-  function bSpline(t, controlPoints) {
-    let t2 = t * t;
-    let t3 = t2 * t;
-    let mt = 1-t;
-    let mt2 = mt * mt;
-    let mt3 = mt2 * mt;
 
-    return (scalarVectorProduct(mt3 * controlPoints.pt0) + 
-              scalarVectorProduct(3*mt2*t, controlPoints.pt1) + 
-              scalarVectorProduct(3*mt*t2, controlPoints.pt2) + 
-              scalarVectorProduct(t3, controlPoints.pt3));
-  }
-
-  let scalarVectorProduct = function(a, B)
-  {
-      let C = {x:0, y:0, z:0};
-      C.x = B.x * a;
-      C.y = B.y * a;
-      C.z = B.z * a;
-
-      return C;
-  }
-
+ 
   /* start the application once the DOM is ready */
   document.addEventListener('DOMContentLoaded', init);
 
