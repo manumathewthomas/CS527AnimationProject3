@@ -58,7 +58,7 @@
 
     /* animate the scene */
 
-    createBoid(500);
+    createBoid(50);
 
   
     console.log(boids);
