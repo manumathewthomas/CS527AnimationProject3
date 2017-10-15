@@ -12,10 +12,10 @@
 
   class Boid {
   	constructor() {
-  		this.velocity = new THREE.Vector3(-5, 0, 0);
+  		this.velocity = new THREE.Vector3(-1, 0, 0);
   		this.geometry = new THREE.ConeGeometry( 5, 20, 32 );
-		this.material = new THREE.MeshBasicMaterial( {color: 0xf03b20} );
-		this.mesh = new THREE.Mesh(this.geometry, this.material );  	}
+		  this.material = new THREE.MeshBasicMaterial( {color: 0xf03b20} );
+		  this.mesh = new THREE.Mesh(this.geometry, this.material );  	}
   }
 
 
@@ -27,7 +27,7 @@
 
   	 _.forEach(boids, function(d){
   	 	d.mesh.rotateZ(Math.PI / 2 );
-  	 	d.mesh.position.set(Math.floor((Math.random() * 50) + 1), Math.floor((Math.random() * 50) + 1), Math.floor((Math.random() * 50) + 1));
+  	 	d.mesh.position.set(Math.floor((Math.random() * 100) + 1), 0, Math.floor((Math.random() * 100) + 1));
     	scene.add(d.mesh);
     });
 
@@ -39,13 +39,16 @@
     camera.position.set( 0, 0 , 600 );
 
     controls = new THREE.OrbitControls( camera );
-    controls.minDistance = 300;
-    controls.maxDistance = 700;
 
     scene = new THREE.Scene();
     scene.background = new THREE.Color( 0xeeeeee );
 
+      var axisHelper = new THREE.AxisHelper(500);
+    scene.add( axisHelper );
+
     scene.add( new THREE.GridHelper( 400, 10 ) );
+
+  
 
     // renderer
     renderer = new THREE.WebGLRenderer( { antialias: true } );
@@ -58,10 +61,7 @@
 
     /* animate the scene */
 
-    createBoid(50);
-
-  
-    console.log(boids);
+    createBoid(5);
 
     animate();
   }
@@ -75,7 +75,7 @@
 
   }
 
-  let rule1 = function(boid) {
+  let cohesion = function(boid) {
   	let center = new  THREE.Vector3();
 
   	_.forEach(boids, function(d) {
@@ -88,43 +88,43 @@
   	return (center.sub(boid.mesh.position)).divideScalar(100);
   }
 
-  let rule2 = function(boid) {
+  let seperate = function(boid) {
   	let velocity = new THREE.Vector3();
 
   	_.forEach(boids, function(d){
   		if(d != boid)
-  			if(d.mesh.position.distanceTo(boid.mesh.position) < 5)
+  			if(d.mesh.position.distanceTo(boid.mesh.position) < 10)
   				velocity = velocity.sub(d.mesh.position.sub(boid.mesh.position));
   	});
 
-  	return velocity
+  	return velocity.divideScalar(100);
   }
 
-  let rule3 = function(boid) {
+  let alignment = function(boid) {
   	let velocity = new THREE.Vector3();
 
   	_.forEach(boids, function(d){
   		if(d != boid)
-  			velocity = velocity .add(d.velocity);
+  			velocity = velocity.add(d.velocity);
   	});
 
   	velocity = velocity.divideScalar(boids.length-1);
 
-  	return (velocity.sub(boid.velocity)).divideScalar(8);
+  	return (velocity.sub(boid.velocity)).divideScalar(100);
   }
 
   let flock = function() {
 
   	_.forEach(boids, function(d){
-  		v1 = rule1(d);
-  		v2 = rule2(d);
-  		v3 = rule3(d);
+  		v1 = cohesion(d);
+  		v2 = seperate(d);
+  		v3 = alignment(d);
 
   		d.velocity.add(v1);
   		d.velocity.add(v2);
   		d.velocity.add(v3);
 
-  		d.mesh.position.add(d.velocity);
+  		d.mesh.position.add(d.velocity.multiplyScalar(1));
   	});
 
   }
