@@ -6,11 +6,13 @@
   let controls;
   let scene;
   let renderer;
-  let target = new THREE.Vector3(250, 0, 0);
+  let target = new THREE.Vector3(250, 50, 0);
   let mouse = {x: 0, y: 0};
   let objects = [];
-  let obstacleMesh; 
-  let obstacleGeometry;
+  let obstacleCubeMesh, obstacleCubeBoundingMesh; 
+  let obstacleCubeGeometry, obstacleCubeBoundingGeometry;
+  let obstacleCubeMesh2, obstacleCubeBoundingMesh2; 
+  let obstacleCubeGeometry2, obstacleCubeBoundingGeometry2;
 
 
   let boids = [];
@@ -20,14 +22,13 @@
   	constructor() {
   		this.velocity = new THREE.Vector3(0, 0, 0);
   		this.acceleration = new THREE.Vector3(0, 0, 0);
-  		this.maxSpeed = 0.5;
-  		this.maxForce = 0.2;
+  		this.maxSpeed = 0.4;
+  		this.maxForce = 0.1;
   		this.geometry = new THREE.ConeGeometry( 3, 5, 32 );
   		this.axis = new THREE.Vector3(0, 1, 0);
 		this.material = new THREE.MeshBasicMaterial( {color: 0xf03b20} );
 		this.mesh = new THREE.Mesh(this.geometry, this.material );  
-		this.collision = false;	
-
+		this.cohesion = false;;
 	}
   }
 
@@ -39,13 +40,17 @@
 
   	 _.forEach(boids, function(d){
   	 	d.mesh.rotateZ(-Math.PI / 2 );
-    	d.mesh.position.set( Math.floor(Math.random() * 200) -400 , 10 , Math.floor(Math.random() * 400) -200 );
+    	d.mesh.position.set( Math.floor(Math.random() * 200) -400 , 50 , Math.floor(Math.random() * 400) -200 );
     	scene.add(d.mesh);
     });
 
   }
 
   let createScene = function() {
+
+
+    let control = new THREE.TransformControls( camera, renderer.domElement );
+	// control.addEventListener( 'change', animate );
 
     let tableGeometry = new THREE.BoxGeometry( 400, 1, 400 );
     let tableMaterial = new THREE.MeshBasicMaterial( {color: 0x636363} );
@@ -54,15 +59,42 @@
 	objects.push(tableMesh);
     scene.add( tableMesh );
 
-    obstacleGeometry = new THREE.BoxGeometry( 50, 50, 50 );
-	obstacleGeometry.computeBoundingSphere();
+    obstacleCubeGeometry = new THREE.BoxGeometry( 50, 50, 50 );
     let obstacleMaterial = new THREE.MeshBasicMaterial( {color: 0xaddd8e} );
-    obstacleMesh = new THREE.Mesh( obstacleGeometry, obstacleMaterial );
-    obstacleMesh.position.set(0,25,0);
-    scene.add( obstacleMesh );
+    obstacleCubeMesh = new THREE.Mesh( obstacleCubeGeometry, obstacleMaterial );
+    obstacleCubeMesh.position.set(0,50,0);
+    scene.add( obstacleCubeMesh );
 
-	var cubeGeometry = new THREE.BoxGeometry( 50, 50, 50 );
-	var cubeMaterial = new THREE.MeshLambertMaterial( { color: 0x00ff80, overdraw: 0.5 } );
+    obstacleCubeBoundingGeometry = new THREE.SphereGeometry( 45, 10, 10 );
+	let material = new THREE.MeshBasicMaterial( {color: 0xffff00, transparent: true, opacity: 0} );
+	obstacleCubeBoundingMesh = new THREE.Mesh( obstacleCubeBoundingGeometry, material );
+	
+	obstacleCubeMesh.add( obstacleCubeBoundingMesh );
+
+	objects.push(obstacleCubeBoundingMesh);
+
+    control.attach(obstacleCubeMesh);
+    scene.add(control);
+
+
+    let control1 = new THREE.TransformControls( camera, renderer.domElement );
+
+    obstacleCubeGeometry2 = new THREE.BoxGeometry( 50, 50, 50 );
+    obstacleMaterial = new THREE.MeshBasicMaterial( {color: 0xaddd8e} );
+    obstacleCubeMesh2 = new THREE.Mesh( obstacleCubeGeometry2, obstacleMaterial );
+    obstacleCubeMesh2.position.set(0,50, -90);
+    scene.add( obstacleCubeMesh2 );
+
+    obstacleCubeBoundingGeometry2 = new THREE.SphereGeometry( 50, 10, 10 );
+	material = new THREE.MeshBasicMaterial( {color: 0xffff00, transparent: true, opacity: 0.0} );
+	obstacleCubeBoundingMesh2 = new THREE.Mesh( obstacleCubeBoundingGeometry2, material );
+	
+	obstacleCubeMesh2.add( obstacleCubeBoundingMesh2 );
+
+	objects.push(obstacleCubeBoundingMesh2);
+
+    control1.attach(obstacleCubeMesh2);
+    scene.add(control1);
 
   }
  
@@ -78,7 +110,7 @@
     scene.background = new THREE.Color( 0xeeeeee );
 
 
-    createScene();
+   
 
     // let axisHelper = new THREE.AxisHelper(500);
     // scene.add( axisHelper );
@@ -98,8 +130,8 @@
     document.addEventListener('click', onMouseMove, false);
 
     /* animate the scene */
-
-    createBoid(50);
+ 	createScene();
+    createBoid(150);
 
     animate();
   }
@@ -221,17 +253,27 @@
 
 	let raycaster = new THREE.Raycaster();
 	let steer = new THREE.Vector3();
-	raycaster.set(boid.mesh.position, boid.velocity.clone().normalize());
-	let d = raycaster.intersectObject(obstacleMesh);
-	if(d[0] && d[0].distance>0 && d[0].distance < 50)
-	{
-		steer = new THREE.Vector3().subVectors(d[0].face.normal, boid.velocity);
+	raycaster.set(boid.mesh.position.clone(), boid.velocity.clone().normalize());
+	let d = raycaster.intersectObjects(objects);
+	console.log(d);
+
+	if(d[0] && d[0].distance < 25 ){
+		console.log(d);
+
+		// var from = obstacleCubeBoundingMesh.position;
+		// var to = d[0].face.normal;
+		// var direction = to.clone().sub(from);
+		// var length = 100;
+		// var arrowHelper = new THREE.ArrowHelper(direction.normalize(), from, length, 0xff00ff );
+		// scene.add( arrowHelper );
+		steer = new THREE.Vector3().addVectors(d[0].face.normal, boid.velocity);
 		steer.clampLength(steer.length(), boid.maxForce);
 		boid.collision = true;
 	}
-	else
-	boid.collision = false;
-		
+	
+	else {
+		boid.collision = false;
+	}
 	return steer;
   }
 
@@ -255,6 +297,7 @@
 
   	_.forEach(boids, function(d){
 
+
   		let seperateForce = new THREE.Vector3();
   		let alignmnetForce = new THREE.Vector3();
   		let cohesionForce = new THREE.Vector3();
@@ -271,16 +314,15 @@
 
   		seperateForce.multiplyScalar(0.1);
   		alignmnetForce.multiplyScalar(1);
-  		cohesionForce.multiplyScalar(1);
-		obstacleForce.multiplyScalar(5);
-  		seekForce.multiplyScalar(1);
+  		cohesionForce.multiplyScalar(5);
+		obstacleForce.multiplyScalar(0.5);
+  		seekForce.multiplyScalar(0.05);
 
+   		applyForce(d, seekForce);
   		applyForce(d, seperateForce);
   		applyForce(d, alignmnetForce);
   		applyForce(d, cohesionForce);
 		applyForce(d, obstacleForce);
-		if(!d.collision)
-			applyForce(d, seekForce);
 
 
   		update(d);

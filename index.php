@@ -9,6 +9,7 @@
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/87/three.js"></script>
         <script src="lib/js/OrbitControls.js"></script>
+        <script src="lib/js/TransformControls.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.13.1/lodash.min.js"></script>
 
         <script src="src/js/main.js"></script>
