@@ -6,16 +6,21 @@
   let controls;
   let scene;
   let renderer;
-  let target = new THREE.Vector3(250, 30, 0);
+  let target = new THREE.Vector3();
   let mouse = {x: 0, y: 0};
   let objects = [];
   let transformControls = [];
+
   let obstacleCubeMesh, obstacleCubeBoundingMesh; 
   let obstacleCubeGeometry, obstacleCubeBoundingGeometry;
   let obstacleCubeMesh2, obstacleCubeBoundingMesh2; 
   let obstacleCubeGeometry2, obstacleCubeBoundingGeometry2;
   let obstacleCupBoundingMesh; 
   let obstacleCupGeometry, obstacleCupBoundingGeometry;
+
+    
+  let targetMesh, targetBoundingMesh; 
+  let targetGeometry, targetBoundingGeometry;
 
 
   let boids = [];
@@ -52,7 +57,7 @@
   let createScene = function() {
 
 
-    let obstacleCubeControl = new THREE.TransformControls( camera, renderer.domElement );
+ 
 	// control.addEventListener( 'change', animate );
 
     let tableGeometry = new THREE.BoxGeometry( 400, 1, 400 );
@@ -61,6 +66,30 @@
     tableMesh.position.set(0,-5,0);
 	objects.push(tableMesh);
     scene.add( tableMesh );
+
+
+	// targetGeometry = new THREE.BoxGeometry( 50, 50, 50 );
+    // let targetMaterial = new THREE.MeshBasicMaterial( {color: 0xaddd8e} );
+    // targetMesh = new THREE.Mesh( targetGeometry, targetMaterial );
+    // targetMesh.position.set(0,25,0);
+    // scene.add( targetMesh );
+
+
+
+    targetBoundingGeometry = new THREE.SphereGeometry( 20, 30, 30 );
+	let targetBoundingMaterial = new THREE.MeshBasicMaterial( {color: 0x2171b5, transparent: true, opacity: 0.7} );
+	targetBoundingMesh = new THREE.Mesh( targetBoundingGeometry, targetBoundingMaterial); 
+
+	scene.add(targetBoundingMesh);
+	targetBoundingMesh.position.set(250, 30, 0);
+
+	objects.push(targetBoundingMesh);
+
+	let targetControl = new THREE.TransformControls( camera, renderer.domElement );
+	targetControl.attach(targetBoundingMesh);
+	transformControls.push(targetControl);
+	
+	let obstacleCubeControl = new THREE.TransformControls( camera, renderer.domElement );
 
     obstacleCubeGeometry = new THREE.BoxGeometry( 50, 50, 50 );
     let obstacleMaterial = new THREE.MeshBasicMaterial( {color: 0xaddd8e} );
@@ -297,7 +326,6 @@
 
 	if(d[0] && d[0].distance < 25 ){
 		
-
 		// var from = obstacleCubeBoundingMesh.position;
 		// var to = d[0].face.normal;
 		// var direction = to.clone().sub(from);
@@ -328,6 +356,21 @@
   }
 
   let onMouseMove = function(event) {
+
+	var vector = new THREE.Vector3();
+
+	vector.set(
+		( event.clientX / window.innerWidth ) * 2 - 1,
+		- ( event.clientY / window.innerHeight ) * 2 + 1,
+		0.5 );
+
+	vector.unproject( camera );
+
+	var dir = vector.sub( camera.position ).normalize();
+
+	var distance = - camera.position.z / dir.z;
+
+	var pos = camera.position.clone().add( dir.multiplyScalar( distance ) );
 	
   } 
 
@@ -373,6 +416,9 @@
    let animate = function() {
 
    	flock();
+	
+	target.set(targetBoundingMesh.position.x, targetBoundingMesh.position.y, targetBoundingMesh.position.z);
+	
     requestAnimationFrame( animate );
 
 
@@ -385,13 +431,14 @@
 			_.forEach(boids, function(d) {
 				scene.remove(d.mesh);
 			});
-			console.log(this.BoidSize);
+			
 			boids=[];
 			createBoid(this.BoidSize);
 		};
 		this.displayTransform = false;
 		this.displayColliders = false;
 		this.BoidSize = 150;
+		this.BoidRate = 0;
 
 		
 	};
@@ -416,19 +463,23 @@
 	gui.add(control, "displayColliders").onChange(function(checked) {
 		if(checked) {
 			_.forEach(objects, function(d) {
-				console.log(d);
-				d.material.opacity = 0.2;
+				console.log(d)
+				if(d.parent.parent)
+					d.material.opacity = 0.2;
 			});
 		}
 		else {
 			_.forEach(objects, function(d) {
-				d.material.opacity = 0;
+				if(d.parent.parent)
+					d.material.opacity = 0;
 			});
 		}
 	});
 
 	gui.add(control, "BoidSize", 2, 500).step(1);
+	
   }
+
 
 
  
