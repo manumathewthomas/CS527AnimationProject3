@@ -208,38 +208,38 @@
 	});
 
 
-	// loader.load( 'models/boiler.obj', function ( obstacleBoilerMesh ) {
+	loader.load( 'models/monkey.obj', function ( obstacleBoilerMesh ) {
 
-	// 	var material = new THREE.MeshBasicMaterial( { color: 0x8856a7, side: THREE.DoubleSide } );
+		var material = new THREE.MeshBasicMaterial( { color: 0x8856a7, side: THREE.DoubleSide } );
 
-	// 	obstacleBoilerMesh.traverse( function ( child ) {
+		obstacleBoilerMesh.traverse( function ( child ) {
 
-	// 		if ( child instanceof THREE.Mesh ) {
+			if ( child instanceof THREE.Mesh ) {
 
-	// 			child.material = material;
+				child.material = material;
 
-	// 		}
+			}
 
-	// 	} );
-	// 	obstacleBoilerMesh.position.set(0,0,-90);
-	// 	obstacleBoilerMesh.scale.set(25,25,25);
+		} );
+		obstacleBoilerMesh.position.set(0,-30,-90);
+		obstacleBoilerMesh.scale.set(75,75,75);
 		
-	// 	scene.add( obstacleBoilerMesh );
+		scene.add( obstacleBoilerMesh );
 
-	// 	obstacleBoilerBoundingGeometry = new THREE.SphereGeometry( 2, 10, 10 );
-	// 	let obstacleBoilermaterial = new THREE.MeshBasicMaterial( {color: 0xffff00, transparent: true, opacity: 0} );
-	// 	obstacleBoilerBoundingMesh = new THREE.Mesh( obstacleBoilerBoundingGeometry, obstacleBoilermaterial );
-	// 	obstacleBoilerBoundingMesh.position.set(0, 0.5, -0.1);
+		obstacleBoilerBoundingGeometry = new THREE.SphereGeometry( 0.4, 10, 10 );
+		let obstacleBoilermaterial = new THREE.MeshBasicMaterial( {color: 0xffff00, transparent: true, opacity: 0} );
+		obstacleBoilerBoundingMesh = new THREE.Mesh( obstacleBoilerBoundingGeometry, obstacleBoilermaterial );
+		obstacleBoilerBoundingMesh.position.set(-0.75, 0.7, -0.4);
 	
 
-	// 	obstacleBoilerMesh.add( obstacleBoilerBoundingMesh );
+		obstacleBoilerMesh.add( obstacleBoilerBoundingMesh );
 
-	// 	objects.push(obstacleBoilerBoundingMesh);
-	// 	let obstacleBoilerControl = new THREE.TransformControls( camera, renderer.domElement );
-	// 	obstacleBoilerControl.attach(obstacleBoilerMesh);
-	// 	transformControls.push(obstacleBoilerControl);
+		objects.push(obstacleBoilerBoundingMesh);
+		let obstacleBoilerControl = new THREE.TransformControls( camera, renderer.domElement );
+		obstacleBoilerControl.attach(obstacleBoilerMesh);
+		transformControls.push(obstacleBoilerControl);
 
-	// });
+	});
 
   }
  
