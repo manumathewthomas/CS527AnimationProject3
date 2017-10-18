@@ -15,8 +15,17 @@
   let obstacleCubeGeometry, obstacleCubeBoundingGeometry;
   let obstacleCubeMesh2, obstacleCubeBoundingMesh2; 
   let obstacleCubeGeometry2, obstacleCubeBoundingGeometry2;
+
   let obstacleCupBoundingMesh; 
   let obstacleCupGeometry, obstacleCupBoundingGeometry;
+
+
+  let obstacleLaptopBoundingMesh; 
+  let obstacleLaptopGeometry, obstacleLaptopBoundingGeometry;
+
+
+  let obstacleBoilerBoundingMesh; 
+  let obstacleBoilerGeometry, obstacleBoilerBoundingGeometry;
 
     
   let targetMesh, targetBoundingMesh; 
@@ -94,7 +103,7 @@
     obstacleCubeGeometry = new THREE.BoxGeometry( 50, 50, 50 );
     let obstacleMaterial = new THREE.MeshBasicMaterial( {color: 0xaddd8e} );
     obstacleCubeMesh = new THREE.Mesh( obstacleCubeGeometry, obstacleMaterial );
-    obstacleCubeMesh.position.set(0,25,0);
+    obstacleCubeMesh.position.set(-100,25,50);
     scene.add( obstacleCubeMesh );
 
     obstacleCubeBoundingGeometry = new THREE.SphereGeometry( 45, 10, 10 );
@@ -111,10 +120,10 @@
 
     let obstacleCubeControl2 = new THREE.TransformControls( camera, renderer.domElement );
 
-    obstacleCubeGeometry2 = new THREE.BoxGeometry( 50, 50, 50 );
-    obstacleMaterial = new THREE.MeshBasicMaterial( {color: 0xaddd8e} );
+    obstacleCubeGeometry2 = new THREE.OctahedronGeometry( 50, 1);
+    obstacleMaterial = new THREE.MeshBasicMaterial( {color: 0x2ca25f} );
     obstacleCubeMesh2 = new THREE.Mesh( obstacleCubeGeometry2, obstacleMaterial );
-    obstacleCubeMesh2.position.set(0,25, -90);
+    obstacleCubeMesh2.position.set(100,25, 0);
     scene.add( obstacleCubeMesh2 );
 
     obstacleCubeBoundingGeometry2 = new THREE.SphereGeometry( 50, 10, 10 );
@@ -134,7 +143,7 @@
 
 	loader.load( 'models/cup.obj', function ( obstacleCupMesh ) {
 
-		var material = new THREE.MeshBasicMaterial( { color: 0x660000 } );
+		var material = new THREE.MeshBasicMaterial( { color: 0x660000, side: THREE.DoubleSide } );
 
 		obstacleCupMesh.traverse( function ( child ) {
 
@@ -161,6 +170,74 @@
 		let obstacleCupControl = new THREE.TransformControls( camera, renderer.domElement );
 		obstacleCupControl.attach(obstacleCupMesh);
 		transformControls.push(obstacleCupControl);
+
+	});
+
+
+	loader.load( 'models/fan.obj', function ( obstacleLaptopMesh ) {
+
+		var material = new THREE.MeshBasicMaterial( { color: 0xe6550d, side: THREE.DoubleSide } );
+
+		obstacleLaptopMesh.traverse( function ( child ) {
+
+			if ( child instanceof THREE.Mesh ) {
+
+				child.material = material;
+
+			}
+
+		} );
+		obstacleLaptopMesh.position.set(0,0,0);
+		obstacleLaptopMesh.scale.set(5,5,5);
+		
+		scene.add( obstacleLaptopMesh );
+
+		obstacleLaptopBoundingGeometry = new THREE.SphereGeometry( 7, 10, 10 );
+		let obstacleLaptopmaterial = new THREE.MeshBasicMaterial( {color: 0xffff00, transparent: true, opacity: 0} );
+		obstacleLaptopBoundingMesh = new THREE.Mesh( obstacleLaptopBoundingGeometry, obstacleLaptopmaterial );
+		obstacleLaptopBoundingMesh.position.set(0, 5, 0);
+	
+
+		obstacleLaptopMesh.add( obstacleLaptopBoundingMesh );
+
+		objects.push(obstacleLaptopBoundingMesh);
+		let obstacleLaptopControl = new THREE.TransformControls( camera, renderer.domElement );
+		obstacleLaptopControl.attach(obstacleLaptopMesh);
+		transformControls.push(obstacleLaptopControl);
+
+	});
+
+
+	loader.load( 'models/boiler.obj', function ( obstacleBoilerMesh ) {
+
+		var material = new THREE.MeshBasicMaterial( { color: 0x8856a7, side: THREE.DoubleSide } );
+
+		obstacleBoilerMesh.traverse( function ( child ) {
+
+			if ( child instanceof THREE.Mesh ) {
+
+				child.material = material;
+
+			}
+
+		} );
+		obstacleBoilerMesh.position.set(0,0,-90);
+		obstacleBoilerMesh.scale.set(25,25,25);
+		
+		scene.add( obstacleBoilerMesh );
+
+		obstacleBoilerBoundingGeometry = new THREE.SphereGeometry( 2, 10, 10 );
+		let obstacleBoilermaterial = new THREE.MeshBasicMaterial( {color: 0xffff00, transparent: true, opacity: 0} );
+		obstacleBoilerBoundingMesh = new THREE.Mesh( obstacleBoilerBoundingGeometry, obstacleBoilermaterial );
+		obstacleBoilerBoundingMesh.position.set(0, 0.5, -0.1);
+	
+
+		obstacleBoilerMesh.add( obstacleBoilerBoundingMesh );
+
+		objects.push(obstacleBoilerBoundingMesh);
+		let obstacleBoilerControl = new THREE.TransformControls( camera, renderer.domElement );
+		obstacleBoilerControl.attach(obstacleBoilerMesh);
+		transformControls.push(obstacleBoilerControl);
 
 	});
 
